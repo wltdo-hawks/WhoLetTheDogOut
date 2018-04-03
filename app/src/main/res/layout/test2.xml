@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary">
+
+    <ImageView
+        android:id="@+id/testpic2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="11dp"
+        android:layout_marginEnd="238dp"
+        android:layout_weight="1"
+        app:srcCompat="@mipmap/lucy" />
+
+    <TextView
+        android:id="@+id/status2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="150dp"
+        android:layout_marginTop="220dp"
+        android:layout_weight="1"
+        android:text="Opened at "
+        android:textColor="@android:color/white"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/time2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/status2"
+        android:layout_alignBottom="@+id/status2"
+        android:layout_alignStart="@+id/status2"
+        android:layout_marginStart="127dp"
+        android:textColor="@android:color/white"
+        android:layout_weight="1"
+        android:text="12:30:15"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/dogID2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/status2"
+        android:layout_below="@+id/status2"
+        android:textColor="@android:color/white"
+        android:layout_marginTop="40dp"
+        android:text="By Lucy" />
+</RelativeLayout>
