@@ -67,7 +67,6 @@ public class DoorActivity extends AppCompatActivity {
         StorageReference storageRef = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/lucydoortest1.jpg");
         database = FirebaseDatabase.getInstance();
         final DatabaseReference myRef = database.getReference("message").child("part 1");
-        final DatabaseReference myRef2 = database.getReference("message").child("part 2");
         userData = database.getReference("Users").child(user.getUid());
         doorStatusData = userData.child("Flags").child("Door Status");
         statusLog = userData.child("Logs").child("status");
