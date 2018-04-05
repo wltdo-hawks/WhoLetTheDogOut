@@ -15,7 +15,7 @@
         android:layout_height="@dimen/logo_w_h"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="30dp"
-        app:srcCompat="@drawable/common_google_signin_btn_icon_light" />
+        app:srcCompat="@drawable/wltdologo" />
 
     <EditText
         android:id="@+id/email"

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WhoLetTheDogOut</string>
+    <string name="app_name">WLTDO</string>
     <string name="minimum_password">Password too short, enter minimum 6 characters</string>
     <string name="mAuth_failed">Authentication failed, check your email and password or sign up</string>
     <string name="action_sign_in_short">Register</string>
@@ -34,5 +34,7 @@
     <string name="register">Register</string>
     <string name="status">Status</string>
     <string name="open_close_status">Closed</string>
+    <string name="open">Open</string>
+    <string name="closed">Closed</string>
 
 </resources>

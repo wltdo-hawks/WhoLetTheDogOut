@@ -15,6 +15,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class SignupActivity extends AppCompatActivity {
 
@@ -81,6 +83,7 @@ public class SignupActivity extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 Toast.makeText(SignupActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
                                 progressBar.setVisibility(View.GONE);
+
                                 // If sign in fails, display a message to the user. If sign in succeeds
                                 // the auth state listener will be notified and logic to handle the
                                 // signed in user can be handled in the listener.
@@ -88,6 +91,8 @@ public class SignupActivity extends AppCompatActivity {
                                     Toast.makeText(SignupActivity.this, "Authentication failed." + task.getException(),
                                             Toast.LENGTH_SHORT).show();
                                 } else {
+                                    FirebaseUser user = mAuth.getCurrentUser();
+                                    writeNewUser(user.getUid(), user.getEmail());
                                     startActivity(new Intent(SignupActivity.this, DoorActivity.class));
                                     finish();
                                 }
@@ -96,6 +101,14 @@ public class SignupActivity extends AppCompatActivity {
 
             }
         });
+
+
+    }
+
+    private void writeNewUser(String userId, String email) {
+        User user = new User(email);
+
+        FirebaseDatabase.getInstance().getReference().child("Users").child(userId).setValue(user);
     }
 
     @Override

@@ -18,6 +18,8 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -29,6 +31,10 @@ import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DoorActivity extends AppCompatActivity {
 
@@ -38,28 +44,34 @@ public class DoorActivity extends AppCompatActivity {
     private Button btnAccount;
     private ImageView mImageView;
     private boolean checked;
+    private FirebaseAuth mAuth;
     private String[] status = {"Opened at ","Closed at ","Opened at ","Closed at "};
     private String[] time = {"12:30","12:32","2:46","2:50"};
     private String[] dog = {"By Lucy","By Lucy", "By Bella", "By Bella"};
     Integer[] imgid = {R.mipmap.lucydoortest1, R.mipmap.lucydoortest2, R.mipmap.lucydoortest3, R.mipmap.lucydoortest4};
+    private DatabaseReference userData, doorStatusData, statusLog,dogID;
+    private FirebaseDatabase database;
+    FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_door);
 
-        final Switch doorSwitch = (Switch) findViewById(R.id.door_switch);
-        final TextView doorStatus = (TextView) findViewById(R.id.door_status);
+        mAuth = FirebaseAuth.getInstance();
+        doorSwitch = (Switch) findViewById(R.id.door_switch);
+        doorStatus = (TextView) findViewById(R.id.door_status);
         ListView doorlog = (ListView) findViewById(R.id.list);
+        user = mAuth.getCurrentUser();
         FirebaseStorage storage = FirebaseStorage.getInstance();
-        StorageReference storageRef = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com").child("lucydoortest1.jpg");
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        StorageReference storageRef = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/lucydoortest1.jpg");
+        database = FirebaseDatabase.getInstance();
         final DatabaseReference myRef = database.getReference("message").child("part 1");
         final DatabaseReference myRef2 = database.getReference("message").child("part 2");
-        final DatabaseReference doorStatusData = database.getReference("Flags").child("Door Status");
-        final DatabaseReference logData = database.getReference("Logs");
-        final DatabaseReference statusLog = database.getReference("Logs").child("Status");
-        final DatabaseReference dogID = database.getReference("Logs").child("Dog ID");
+        userData = database.getReference("Users").child(user.getUid());
+        doorStatusData = userData.child("Flags").child("Door Status");
+        statusLog = userData.child("Logs").child("status");
+        dogID = userData.child("Logs").child("dog");
 
         CustomListview customListview = new CustomListview(this, status, dog, imgid);
         doorlog.setAdapter(customListview);
@@ -74,26 +86,20 @@ public class DoorActivity extends AppCompatActivity {
             }
         });
 
-        dogID.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String value = dataSnapshot.getValue(String.class);
-                //updateView(1,value);
-                 dog = new String[]{value, value, value, value};
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
         doorStatusData.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String value = dataSnapshot.getValue(String.class);
-                doorSwitch.setChecked(isChecked(value));
-                doorStatus.setText(value);
+                    if(value == null)
+                    {
+                        doorStatusData.setValue("Closed");
+                    }
+                    if(value != null)
+                    {
+                        doorSwitch.setChecked(isChecked(value));
+                        doorStatus.setText(value);
+                    }
+
             }
 
             @Override
@@ -105,17 +111,20 @@ public class DoorActivity extends AppCompatActivity {
         doorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b==true)
+                if(b)
                 {
-                    doorStatus.setText("Open");
+                    doorStatus.setText(R.string.open);
                     doorStatus.setTextColor(Color.GREEN);
                     doorStatusData.setValue("Open");
+                    writeNewMessage("Opened at ", "Lucy");
                 }
-                else if(b==false)
+                else if(!b)
                 {
-                    doorStatus.setText("Closed");
+                    doorStatus.setText(R.string.closed);
                     doorStatus.setTextColor(Color.RED);
-                    doorStatusData.setValue("Closed ");
+                    doorStatusData.setValue("Closed");
+                    writeNewMessage("Closed at ", "Lucy");
+
                 }
 
             }
@@ -135,13 +144,17 @@ public class DoorActivity extends AppCompatActivity {
         return b;
     }
 
-    /*private void updateView(int index, String change){
-        View v = doorLog.getChildAt(index - doorLog.getFirstVisiblePosition());
+    private void writeNewMessage(String body, String dog) {
+        String time = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy").format(Calendar.getInstance().getTime());
+        Logs log = new Logs(body, time , dog);
+        Map<String, Object> childUpdates = new HashMap<>();
 
-        if(v == null)
-            return;
+        String key = userData.child("Logs").push().getKey();
 
-        TextView someText = (TextView) v.findViewById(R.id.status);
-        someText.setText(change);
-    }*/
+        childUpdates.put("/Logs/" + key, log);
+
+        userData.updateChildren(childUpdates);
+    }
+
+
 }

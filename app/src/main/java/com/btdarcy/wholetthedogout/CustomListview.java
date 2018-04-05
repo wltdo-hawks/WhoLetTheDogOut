@@ -49,21 +49,19 @@ public class CustomListview extends ArrayAdapter<String> {
         }
         viewHolder.ivw.setImageResource(imgid[position]);
         viewHolder.tvw1.setText(status[position]);
-        viewHolder.tvw3.setText(dog[position]);
+        viewHolder.tvw2.setText(dog[position]);
         return r;
 
     }
     class ViewHolder
     {
         TextView tvw1;
-
-        TextView tvw3;
+        TextView tvw2;
         ImageView ivw;
         ViewHolder(View v)
         {
             tvw1 = (TextView) v.findViewById(R.id.status);
-
-            tvw3 = v.findViewById(R.id.dogID);
+            tvw2 = v.findViewById(R.id.dogID);
             ivw = v.findViewById(R.id.testpic);
         }
     }
