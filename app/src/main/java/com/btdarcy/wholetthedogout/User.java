@@ -1,7 +1,7 @@
 package com.btdarcy.wholetthedogout;
 
 public class User {
-    public String Email;
+    public String Email, Logs, Flags;
 
 
     public User() {

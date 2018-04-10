@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -16,6 +18,8 @@ import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -32,8 +36,11 @@ import com.google.firebase.storage.StorageReference;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 public class DoorActivity extends AppCompatActivity {
@@ -45,13 +52,21 @@ public class DoorActivity extends AppCompatActivity {
     private ImageView mImageView;
     private boolean checked;
     private FirebaseAuth mAuth;
+    private RecyclerView logView;
+    private RecyclerView.Adapter adapter;
+    private RecyclerView.LayoutManager mLayoutManager;
     private String[] status = {"Opened at ","Closed at ","Opened at ","Closed at "};
     private String[] time = {"12:30","12:32","2:46","2:50"};
     private String[] dog = {"By Lucy","By Lucy", "By Bella", "By Bella"};
     Integer[] imgid = {R.mipmap.lucydoortest1, R.mipmap.lucydoortest2, R.mipmap.lucydoortest3, R.mipmap.lucydoortest4};
     private DatabaseReference userData, doorStatusData, statusLog,dogID;
     private FirebaseDatabase database;
+    private FirebaseStorage storage;
+    private StorageReference storageRef,storageRef2;
     FirebaseUser user;
+    private List<Logs> listItems;
+    private String imgURL;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,10 +76,13 @@ public class DoorActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         doorSwitch = (Switch) findViewById(R.id.door_switch);
         doorStatus = (TextView) findViewById(R.id.door_status);
-        ListView doorlog = (ListView) findViewById(R.id.list);
+        //ListView doorlog = (ListView) findViewById(R.id.list);
+        mImageView = findViewById(R.id.current_pic);
         user = mAuth.getCurrentUser();
-        FirebaseStorage storage = FirebaseStorage.getInstance();
-        StorageReference storageRef = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/lucydoortest1.jpg");
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/lucydoortest1.jpg");
+        storageRef2 = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/pic.jpg");
+        imgURL = "https://firebasestorage.googleapis.com/v0/b/wltdo-9af27.appspot.com/o/pictures%2Flucydoortest1.jpg?alt=media&token=bf3856d8-d318-4d98-80b7-e23586de5dfe";
         database = FirebaseDatabase.getInstance();
         final DatabaseReference myRef = database.getReference("message").child("part 1");
         userData = database.getReference("Users").child(user.getUid());
@@ -72,8 +90,21 @@ public class DoorActivity extends AppCompatActivity {
         statusLog = userData.child("Logs").child("status");
         dogID = userData.child("Logs").child("dog");
 
-        CustomListview customListview = new CustomListview(this, status, dog, imgid);
-        doorlog.setAdapter(customListview);
+        logView = findViewById(R.id.log_view);
+        logView.setHasFixedSize(true);
+        mLayoutManager = new LinearLayoutManager(this);
+        logView.setLayoutManager(mLayoutManager);
+        listItems = new ArrayList<>();
+        adapter = new MyAdapter(listItems, this);
+        logView.setAdapter(adapter);
+
+        Glide.with(this )
+                .using(new FirebaseImageLoader())
+                .load(storageRef)
+                .into(mImageView);
+
+        //CustomListview customListview = new CustomListview(this, status, dog, imgid);
+        //doorlog.setAdapter(customListview);
 
         btnAccount = findViewById(R.id.account);
 
@@ -97,6 +128,14 @@ public class DoorActivity extends AppCompatActivity {
                     {
                         doorSwitch.setChecked(isChecked(value));
                         doorStatus.setText(value);
+                        if(value.equals("Open"))
+                        {
+                            writeNewMessage("Opened at ", "Lucy", storageRef);
+                        }
+                        else if(value.equals("Closed"))
+                        {
+                            writeNewMessage("Closed at ", "Bryan", storageRef2);
+                        }
                     }
 
             }
@@ -115,14 +154,14 @@ public class DoorActivity extends AppCompatActivity {
                     doorStatus.setText(R.string.open);
                     doorStatus.setTextColor(Color.GREEN);
                     doorStatusData.setValue("Open");
-                    writeNewMessage("Opened at ", "Lucy");
+
                 }
                 else if(!b)
                 {
                     doorStatus.setText(R.string.closed);
                     doorStatus.setTextColor(Color.RED);
                     doorStatusData.setValue("Closed");
-                    writeNewMessage("Closed at ", "Lucy");
+                    //writeNewMessage("Closed at ", "Lucy", storageRef2);
 
                 }
 
@@ -143,14 +182,18 @@ public class DoorActivity extends AppCompatActivity {
         return b;
     }
 
-    private void writeNewMessage(String body, String dog) {
+    private void writeNewMessage(String body, String dog ,StorageReference mPic) {
         String time = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy").format(Calendar.getInstance().getTime());
-        Logs log = new Logs(body, time , dog);
-        Map<String, Object> childUpdates = new HashMap<>();
+        Logs log = new Logs(body, time , dog ,mPic);
+        listItems.add(log);
+        adapter = new MyAdapter(listItems, getApplicationContext());
+        logView.setAdapter(adapter);
 
+        LogsTest log2 = new LogsTest(log.getStatus(), log.getTime(), log.getDog());
+        Map<String, Object> childUpdates = new HashMap<>();
         String key = userData.child("Logs").push().getKey();
 
-        childUpdates.put("/Logs/" + key, log);
+        childUpdates.put("/Logs/" + key, log2);
 
         userData.updateChildren(childUpdates);
     }

@@ -6,21 +6,19 @@ import com.google.firebase.storage.StorageReference;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Logs {
+public class LogsTest {
     public String status;
     public String time;
     public String dog;
-    public StorageReference pic;
 
-    public Logs() {
+    public LogsTest() {
         // Default constructor required for calls to DataSnapshot.getValue(Post.class)
     }
 
-    public Logs(String body, String time, String dog, StorageReference pic) {
+    public LogsTest(String body, String time, String dog) {
         this.status = body;
         this.time = time;
         this.dog = dog;
-        this.pic = pic;
     }
 
     @Exclude
@@ -29,7 +27,6 @@ public class Logs {
         result.put("Status", status);
         result.put("Time", time);
         result.put("Dog", dog);
-        result.put("Pic",pic);
 
         return result;
     }
@@ -41,8 +38,5 @@ public class Logs {
     }
     public String getDog(){
         return dog;
-    }
-    public StorageReference getPic() {
-        return pic;
     }
 }

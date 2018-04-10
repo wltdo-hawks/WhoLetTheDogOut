@@ -67,8 +67,14 @@
         </LinearLayout>
     </LinearLayout>
 
-    <ListView
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/log_view"
+        android:scrollbars="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+<!--    <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent" />-->
 </LinearLayout>
