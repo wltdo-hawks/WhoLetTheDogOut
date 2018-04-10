@@ -18,6 +18,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     public MyAdapter(List<Logs> listItems, Context context){
         this.listItems = listItems;
         this.context = context;
+        
     }
 
     @Override
