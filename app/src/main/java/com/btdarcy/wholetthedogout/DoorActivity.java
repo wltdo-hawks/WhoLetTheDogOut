@@ -24,6 +24,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -38,6 +39,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -47,25 +49,18 @@ public class DoorActivity extends AppCompatActivity {
 
     private Switch doorSwitch;
     private TextView doorStatus;
-    private ListView doorLog;
     private Button btnAccount;
     private ImageView mImageView;
-    private boolean checked;
     private FirebaseAuth mAuth;
     private RecyclerView logView;
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager mLayoutManager;
-    private String[] status = {"Opened at ","Closed at ","Opened at ","Closed at "};
-    private String[] time = {"12:30","12:32","2:46","2:50"};
-    private String[] dog = {"By Lucy","By Lucy", "By Bella", "By Bella"};
-    Integer[] imgid = {R.mipmap.lucydoortest1, R.mipmap.lucydoortest2, R.mipmap.lucydoortest3, R.mipmap.lucydoortest4};
-    private DatabaseReference userData, doorStatusData, statusLog,dogID;
+    private DatabaseReference userData, doorStatusData, doorState, flags,logs, statusLog,dogID;
     private FirebaseDatabase database;
     private FirebaseStorage storage;
     private StorageReference storageRef,storageRef2;
-    FirebaseUser user;
+    private FirebaseUser user;
     private List<Logs> listItems;
-    private String imgURL;
 
 
     @Override
@@ -74,21 +69,22 @@ public class DoorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_door);
 
         mAuth = FirebaseAuth.getInstance();
-        doorSwitch = (Switch) findViewById(R.id.door_switch);
-        doorStatus = (TextView) findViewById(R.id.door_status);
-        //ListView doorlog = (ListView) findViewById(R.id.list);
+        doorSwitch = findViewById(R.id.door_switch);
+        doorStatus = findViewById(R.id.door_status);
+        btnAccount = findViewById(R.id.account);
         mImageView = findViewById(R.id.current_pic);
         user = mAuth.getCurrentUser();
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/lucydoortest1.jpg");
         storageRef2 = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/pic.jpg");
-        imgURL = "https://firebasestorage.googleapis.com/v0/b/wltdo-9af27.appspot.com/o/pictures%2Flucydoortest1.jpg?alt=media&token=bf3856d8-d318-4d98-80b7-e23586de5dfe";
         database = FirebaseDatabase.getInstance();
-        final DatabaseReference myRef = database.getReference("message").child("part 1");
         userData = database.getReference("Users").child(user.getUid());
-        doorStatusData = userData.child("Flags").child("Door Status");
-        statusLog = userData.child("Logs").child("status");
-        dogID = userData.child("Logs").child("dog");
+        flags = userData.child("Flags");
+        doorStatusData = flags.child("Door Status");
+        doorState = flags.child("Door State");
+        logs = userData.child("Logs");
+        statusLog = logs.child("status");
+        dogID = logs.child("dog");
 
         logView = findViewById(R.id.log_view);
         logView.setHasFixedSize(true);
@@ -103,12 +99,6 @@ public class DoorActivity extends AppCompatActivity {
                 .load(storageRef)
                 .into(mImageView);
 
-        //CustomListview customListview = new CustomListview(this, status, dog, imgid);
-        //doorlog.setAdapter(customListview);
-
-        btnAccount = findViewById(R.id.account);
-
-
         btnAccount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -116,25 +106,57 @@ public class DoorActivity extends AppCompatActivity {
             }
         });
 
-        doorStatusData.addValueEventListener(new ValueEventListener() {
+        doorStatusData.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String value = dataSnapshot.getValue(String.class);
-                    if(value == null)
-                    {
-                        doorStatusData.setValue("Closed");
-                    }
+                if(value == null)
+                {
+                    doorStatusData.setValue("Close");
+                    doorState.setValue("Closed");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        doorState.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String value = dataSnapshot.getValue(String.class);
+
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        doorState.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String value = dataSnapshot.getValue(String.class);
+
                     if(value != null)
                     {
                         doorSwitch.setChecked(isChecked(value));
                         doorStatus.setText(value);
                         if(value.equals("Open"))
                         {
-                            writeNewMessage("Opened at ", "Lucy", storageRef);
+                            doorStatus.setText(R.string.open);
+                            doorStatus.setTextColor(Color.GREEN);
+                            doorStatusData.setValue("Open");
                         }
-                        else if(value.equals("Closed"))
+                        else if(value.equals("Close"))
                         {
-                            writeNewMessage("Closed at ", "Bryan", storageRef2);
+                            doorStatus.setText(R.string.closed);
+                            doorStatus.setTextColor(Color.RED);
+                            doorStatusData.setValue("Close");
                         }
                     }
 
@@ -146,27 +168,72 @@ public class DoorActivity extends AppCompatActivity {
             }
         });
 
+
         doorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b)
                 {
-                    doorStatus.setText(R.string.open);
-                    doorStatus.setTextColor(Color.GREEN);
                     doorStatusData.setValue("Open");
-
                 }
                 else if(!b)
                 {
-                    doorStatus.setText(R.string.closed);
-                    doorStatus.setTextColor(Color.RED);
-                    doorStatusData.setValue("Closed");
-                    //writeNewMessage("Closed at ", "Lucy", storageRef2);
-
+                    doorStatusData.setValue("Close");
                 }
 
             }
         });
+
+        ChildEventListener childEventListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Logs data = dataSnapshot.getValue(Logs.class);
+
+                String state = data.getStatus();
+                if(state != null) {
+                    switch (state) {
+                        case "Opened at":
+                            data.setPic(storageRef);
+                            break;
+
+                        case "Closed at":
+                            data.setPic(storageRef2);
+                            break;
+
+                        default:
+
+                            break;
+                    }
+                }
+                listItems.add(0,data);
+                while(listItems.size()>4)
+                {
+                    listItems.remove(listItems.size()-1);
+                }
+                logView.setAdapter(adapter);
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+        logs.addChildEventListener(childEventListener);
     }
 
     public boolean isChecked(String state){
@@ -175,7 +242,7 @@ public class DoorActivity extends AppCompatActivity {
         {
             b = true;
         }
-        else if(state.equals("Closed"))
+        else if(state.equals("Close"))
         {
             b = false;
         }
@@ -197,6 +264,4 @@ public class DoorActivity extends AppCompatActivity {
 
         userData.updateChildren(childUpdates);
     }
-
-
 }
