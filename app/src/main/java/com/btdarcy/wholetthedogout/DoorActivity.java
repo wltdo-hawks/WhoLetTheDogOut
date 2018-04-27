@@ -55,10 +55,10 @@ public class DoorActivity extends AppCompatActivity {
     private RecyclerView logView;
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager mLayoutManager;
-    private DatabaseReference userData, doorStatusData, doorState, flags,logs, statusLog,dogID;
+    private DatabaseReference userData, doorStatusData, doorState, flags,logs, statusLog,dogID, test1;
     private FirebaseDatabase database;
     private FirebaseStorage storage;
-    private StorageReference storageRef,storageRef2;
+    private StorageReference storageRef,storageRef2, openPic, closePic;
     private FirebaseUser user;
     private List<Logs> listItems;
 
@@ -76,15 +76,17 @@ public class DoorActivity extends AppCompatActivity {
         user = mAuth.getCurrentUser();
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/lucydoortest1.jpg");
-        storageRef2 = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/pic.jpg");
+        openPic = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/opendoor.png");
+        closePic = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/closedoor.png");
         database = FirebaseDatabase.getInstance();
         userData = database.getReference("Users").child(user.getUid());
         flags = userData.child("Flags");
-        doorStatusData = flags.child("Door Status");
-        doorState = flags.child("Door State");
+        doorStatusData = flags.child("DoorStatus");
+        doorState = flags.child("DoorState");
         logs = userData.child("Logs");
         statusLog = logs.child("status");
         dogID = logs.child("dog");
+        test1 = database.getReference("test1data").child("data");
 
         logView = findViewById(R.id.log_view);
         logView.setHasFixedSize(true);
@@ -113,7 +115,7 @@ public class DoorActivity extends AppCompatActivity {
                 if(value == null)
                 {
                     doorStatusData.setValue("Close");
-                    doorState.setValue("Closed");
+                    doorState.setValue("Close");
                 }
             }
 
@@ -193,11 +195,13 @@ public class DoorActivity extends AppCompatActivity {
                 if(state != null) {
                     switch (state) {
                         case "Opened at":
-                            data.setPic(storageRef);
+                            data.setPic(closePic);
+                            //data.setPic(openPic);
                             break;
 
                         case "Closed at":
-                            data.setPic(storageRef2);
+                            data.setPic(openPic);
+                            //data.setPic(closePic);
                             break;
 
                         default:
@@ -233,6 +237,7 @@ public class DoorActivity extends AppCompatActivity {
 
             }
         };
+        //test1.addChildEventListener(childEventListener);
         logs.addChildEventListener(childEventListener);
     }
 
