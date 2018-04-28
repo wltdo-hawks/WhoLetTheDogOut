@@ -56,13 +56,21 @@
                 android:textColor="@color/red"
                 android:textSize="30sp" />
 
-            <Switch
+            <!--<Switch
                 android:id="@+id/door_switch"
                 android:layout_width="75dp"
                 android:layout_height="50dp"
                 android:layout_marginEnd="10dp"
                 android:checked="false"
-                android:switchMinWidth="60dp" />
+                android:switchMinWidth="60dp" />-->
+
+            <Button
+                android:id="@+id/open_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="30dp"
+
+                android:text="Open" />
 
         </LinearLayout>
     </LinearLayout>

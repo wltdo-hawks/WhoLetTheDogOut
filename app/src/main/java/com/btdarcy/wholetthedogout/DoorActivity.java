@@ -38,6 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ import java.util.Map;
 public class DoorActivity extends AppCompatActivity {
 
     private Switch doorSwitch;
+    private Button openbtn;
     private TextView doorStatus;
     private Button btnAccount;
     private ImageView mImageView;
@@ -55,12 +57,13 @@ public class DoorActivity extends AppCompatActivity {
     private RecyclerView logView;
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager mLayoutManager;
-    private DatabaseReference userData, doorStatusData, doorState, flags,logs, statusLog,dogID, test1;
+    private DatabaseReference userData, openRequest, doorState, flags,logs, statusLog,dogID, test1;
     private FirebaseDatabase database;
     private FirebaseStorage storage;
     private StorageReference storageRef,storageRef2, openPic, closePic;
     private FirebaseUser user;
     private List<Logs> listItems;
+    private boolean idle;
 
 
     @Override
@@ -69,10 +72,11 @@ public class DoorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_door);
 
         mAuth = FirebaseAuth.getInstance();
-        doorSwitch = findViewById(R.id.door_switch);
+        //doorSwitch = findViewById(R.id.door_switch);
         doorStatus = findViewById(R.id.door_status);
         btnAccount = findViewById(R.id.account);
         mImageView = findViewById(R.id.current_pic);
+        openbtn = findViewById(R.id.open_button);
         user = mAuth.getCurrentUser();
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/lucydoortest1.jpg");
@@ -81,7 +85,7 @@ public class DoorActivity extends AppCompatActivity {
         database = FirebaseDatabase.getInstance();
         userData = database.getReference("Users").child(user.getUid());
         flags = userData.child("Flags");
-        doorStatusData = flags.child("DoorStatus");
+        openRequest = flags.child("OpenRequest");
         doorState = flags.child("DoorState");
         logs = userData.child("Logs");
         statusLog = logs.child("status");
@@ -108,58 +112,62 @@ public class DoorActivity extends AppCompatActivity {
             }
         });
 
-        doorStatusData.addListenerForSingleValueEvent(new ValueEventListener() {
+        openRequest.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String value = dataSnapshot.getValue(String.class);
                 if(value == null)
                 {
-                    doorStatusData.setValue("Close");
+                    openRequest.setValue("Close");
+                }
+                if(value.equals("End"))
+                {
+                    //doorSwitch.setChecked(false);
+                    openbtn.setText("Open");
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        openbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openRequest.setValue("Open");
+                openbtn.setText("Waiting");
+                /*doorSwitch.setChecked(true);
+                idle = false;*/
+            }
+        });
+
+        doorState.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String value = dataSnapshot.getValue(String.class);
+
+                if(value == null)
+                {
                     doorState.setValue("Close");
                 }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        doorState.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String value = dataSnapshot.getValue(String.class);
-
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        doorState.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String value = dataSnapshot.getValue(String.class);
 
                     if(value != null)
                     {
-                        doorSwitch.setChecked(isChecked(value));
                         doorStatus.setText(value);
                         if(value.equals("Open"))
                         {
                             doorStatus.setText(R.string.open);
                             doorStatus.setTextColor(Color.GREEN);
-                            doorStatusData.setValue("Open");
                         }
                         else if(value.equals("Close"))
                         {
                             doorStatus.setText(R.string.closed);
                             doorStatus.setTextColor(Color.RED);
-                            doorStatusData.setValue("Close");
                         }
+
                     }
 
             }
@@ -171,44 +179,34 @@ public class DoorActivity extends AppCompatActivity {
         });
 
 
-        doorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        /*doorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b)
+                *//*if(b & !idle)
                 {
-                    doorStatusData.setValue("Open");
+                    openRequest.setValue("Open");
                 }
-                else if(!b)
+                else if(!b & !idle)
                 {
-                    doorStatusData.setValue("Close");
-                }
+                    openRequest.setValue("Close");
+                }*//*
 
             }
-        });
+        });*/
+/*        doorSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                doorSwitch.setChecked(doorSwitch.isChecked());
+            }
+        });*/
 
         ChildEventListener childEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Logs data = dataSnapshot.getValue(Logs.class);
 
-                String state = data.getStatus();
-                if(state != null) {
-                    switch (state) {
-                        case "Opened at":
-                            data.setPic(closePic);
-                            //data.setPic(openPic);
-                            break;
+                updateLogs(data);
 
-                        case "Closed at":
-                            data.setPic(openPic);
-                            //data.setPic(closePic);
-                            break;
-
-                        default:
-
-                            break;
-                    }
-                }
                 listItems.add(0,data);
                 while(listItems.size()>4)
                 {
@@ -241,7 +239,7 @@ public class DoorActivity extends AppCompatActivity {
         logs.addChildEventListener(childEventListener);
     }
 
-    public boolean isChecked(String state){
+    /*public boolean isChecked(String state){
         boolean b = false;
         if(state.equals("Open"))
         {
@@ -252,21 +250,76 @@ public class DoorActivity extends AppCompatActivity {
             b = false;
         }
         return b;
+    }*/
+
+
+
+    private void updateLogs(Logs data)
+    {
+        String state = data.getStatus();
+        if(state != null) {
+            switch (state) {
+                case "Opened by ":
+                    data.setPic(closePic);
+                    //data.setPic(openPic);
+                    break;
+
+                case "Closed by ":
+                    data.setPic(openPic);
+                    //data.setPic(closePic);
+                    break;
+
+                default:
+
+                    break;
+            }
+        }
+
+        String dog = data.getDog();
+        if(dog != null) {
+            switch (dog) {
+                case "1":
+                    data.setDog("Lucy");
+                    break;
+
+                case "2":
+                    data.setDog("Not Lucy");
+                    break;
+
+                default:
+
+                    break;
+            }
+        }
+
+        formatTime(data);
+
     }
 
-    private void writeNewMessage(String body, String dog ,StorageReference mPic) {
-        String time = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy").format(Calendar.getInstance().getTime());
-        Logs log = new Logs(body, time , dog ,mPic);
-        listItems.add(log);
-        adapter = new MyAdapter(listItems, getApplicationContext());
-        logView.setAdapter(adapter);
-
-        LogsTest log2 = new LogsTest(log.getStatus(), log.getTime(), log.getDog());
-        Map<String, Object> childUpdates = new HashMap<>();
-        String key = userData.child("Logs").push().getKey();
-
-        childUpdates.put("/Logs/" + key, log2);
-
-        userData.updateChildren(childUpdates);
+    private void formatTime(Logs data){
+        String time = data.getTime();
+        String[] ftime = time.split("T");
+        String[] temp = ftime[1].split(":");
+        String[] sec = temp[2].split("\\.");
+        String daytime;
+        int h = Integer.parseInt(temp[0]);
+        h = h - 4;
+        if(h < 0){
+            h = h + 24;
+        }
+        if(h > 12) {
+            h = h - 12;
+            daytime = "PM";
+        }else if (h == 0){
+            h = 12;
+            daytime = "AM";
+        }else{
+            daytime = "AM";
+        }
+        String hour = String.valueOf(h);
+        String ttime = hour + ":" +temp[1] + ":" +sec[0] + " " + daytime;
+        String[] tdate = ftime[0].split("-");
+        String date = tdate[1] + "/" + tdate[2] + "/" + tdate[0];
+        data.setTime(ttime  + " " + date);
     }
 }

@@ -34,22 +34,26 @@
                 android:textSize="18sp" />
 
             <TextView
-                android:id="@+id/time"
-                android:layout_width="wrap_content"
+                android:id="@+id/dogID"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:layout_weight="1"
-                android:text="TextView"
-                android:textColor="@android:color/white"
-                android:textSize="18sp" />
+                android:text="By Lucy"
+                android:textSize="18sp"
+                android:textColor="@android:color/white" />
+
         </LinearLayout>
 
         <TextView
-            android:id="@+id/dogID"
+            android:id="@+id/time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="By Lucy"
-            android:textColor="@android:color/white" />
+            android:layout_weight="1"
+            android:text="TextView"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+
     </LinearLayout>
 </LinearLayout>
