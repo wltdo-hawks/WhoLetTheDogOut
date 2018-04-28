@@ -11,11 +11,11 @@
     tools:context="com.btdarcy.wholetthedogout.LoginActivity">
 
     <ImageView
-        android:layout_width="@dimen/logo_w_h"
-        android:layout_height="@dimen/logo_w_h"
+        android:layout_width="wrap_content"
+        android:layout_height="203dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="30dp"
-        app:srcCompat="@drawable/wltdologo" />
+        android:scaleType="centerCrop"
+        android:src="@drawable/wltdologo" />
 
     <EditText
         android:id="@+id/email"

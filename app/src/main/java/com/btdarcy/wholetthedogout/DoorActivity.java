@@ -124,6 +124,9 @@ public class DoorActivity extends AppCompatActivity {
                 {
                     //doorSwitch.setChecked(false);
                     openbtn.setText("Open");
+                }else if(value.equals("Open"))
+                {
+                    openbtn.setText("waiting");
                 }
 
             }
