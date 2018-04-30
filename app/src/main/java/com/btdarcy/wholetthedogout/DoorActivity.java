@@ -48,7 +48,6 @@ import java.util.Map;
 
 public class DoorActivity extends AppCompatActivity {
 
-    private Switch doorSwitch;
     private Button openbtn;
     private TextView doorStatus;
     private Button btnAccount;
@@ -60,10 +59,9 @@ public class DoorActivity extends AppCompatActivity {
     private DatabaseReference userData, openRequest, doorState, flags,logs, statusLog,dogID, test1;
     private FirebaseDatabase database;
     private FirebaseStorage storage;
-    private StorageReference storageRef,storageRef2, openPic, closePic;
+    private StorageReference storageRef, openPic, closePic;
     private FirebaseUser user;
     private List<Logs> listItems;
-    private boolean idle;
 
 
     @Override
@@ -72,7 +70,6 @@ public class DoorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_door);
 
         mAuth = FirebaseAuth.getInstance();
-        //doorSwitch = findViewById(R.id.door_switch);
         doorStatus = findViewById(R.id.door_status);
         btnAccount = findViewById(R.id.account);
         mImageView = findViewById(R.id.current_pic);
@@ -122,7 +119,6 @@ public class DoorActivity extends AppCompatActivity {
                 }
                 if(value.equals("End"))
                 {
-                    //doorSwitch.setChecked(false);
                     openbtn.setText("Open");
                 }else if(value.equals("Open"))
                 {
@@ -142,8 +138,6 @@ public class DoorActivity extends AppCompatActivity {
             public void onClick(View view) {
                 openRequest.setValue("Open");
                 openbtn.setText("Waiting");
-                /*doorSwitch.setChecked(true);
-                idle = false;*/
             }
         });
 
@@ -151,12 +145,10 @@ public class DoorActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String value = dataSnapshot.getValue(String.class);
-
                 if(value == null)
                 {
                     doorState.setValue("Close");
                 }
-
                     if(value != null)
                     {
                         doorStatus.setText(value);
@@ -172,7 +164,6 @@ public class DoorActivity extends AppCompatActivity {
                         }
 
                     }
-
             }
 
             @Override
@@ -180,28 +171,6 @@ public class DoorActivity extends AppCompatActivity {
 
             }
         });
-
-
-        /*doorSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                *//*if(b & !idle)
-                {
-                    openRequest.setValue("Open");
-                }
-                else if(!b & !idle)
-                {
-                    openRequest.setValue("Close");
-                }*//*
-
-            }
-        });*/
-/*        doorSwitch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                doorSwitch.setChecked(doorSwitch.isChecked());
-            }
-        });*/
 
         ChildEventListener childEventListener = new ChildEventListener() {
             @Override
@@ -238,24 +207,8 @@ public class DoorActivity extends AppCompatActivity {
 
             }
         };
-        //test1.addChildEventListener(childEventListener);
         logs.addChildEventListener(childEventListener);
     }
-
-    /*public boolean isChecked(String state){
-        boolean b = false;
-        if(state.equals("Open"))
-        {
-            b = true;
-        }
-        else if(state.equals("Close"))
-        {
-            b = false;
-        }
-        return b;
-    }*/
-
-
 
     private void updateLogs(Logs data)
     {
@@ -264,41 +217,18 @@ public class DoorActivity extends AppCompatActivity {
             switch (state) {
                 case "Opened by ":
                     data.setPic(closePic);
-                    //data.setPic(openPic);
                     break;
-
                 case "Closed by ":
                     data.setPic(openPic);
-                    //data.setPic(closePic);
                     break;
-
                 default:
-
-                    break;
-            }
-        }
-
-        String dog = data.getDog();
-        if(dog != null) {
-            switch (dog) {
-                case "1":
-                    data.setDog("Lucy");
-                    break;
-
-                case "2":
-                    data.setDog("Not Lucy");
-                    break;
-
-                default:
-
                     break;
             }
         }
 
         formatTime(data);
-
     }
-
+    //converts the time format from UTC to EST
     private void formatTime(Logs data){
         String time = data.getTime();
         String[] ftime = time.split("T");
