@@ -82,8 +82,8 @@ public class DoorActivity extends AppCompatActivity {
         database = FirebaseDatabase.getInstance();
         userData = database.getReference("Users").child(user.getUid());
         flags = userData.child("Flags");
-        openRequest = flags.child("OpenRequest");
-        doorState = flags.child("DoorState");
+        openRequest = flags.child("Flag2").child("OpenRequest");
+        doorState = flags.child("Flag1").child("DoorState");
         logs = userData.child("Logs");
         statusLog = logs.child("status");
         dogID = logs.child("dog");
