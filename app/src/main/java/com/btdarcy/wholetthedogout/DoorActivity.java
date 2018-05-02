@@ -1,9 +1,11 @@
 package com.btdarcy.wholetthedogout;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -50,13 +52,14 @@ public class DoorActivity extends AppCompatActivity {
 
     private Button openbtn;
     private TextView doorStatus;
+    private Switch lockToggle;
     private Button btnAccount;
     private ImageView mImageView;
     private FirebaseAuth mAuth;
     private RecyclerView logView;
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager mLayoutManager;
-    private DatabaseReference userData, openRequest, doorState, flags,logs, statusLog,dogID, test1;
+    private DatabaseReference userData, openRequest, doorState, flags,logs, lockStatus, statusLog,dogID, test1;
     private FirebaseDatabase database;
     private FirebaseStorage storage;
     private StorageReference storageRef, openPic, closePic;
@@ -74,6 +77,7 @@ public class DoorActivity extends AppCompatActivity {
         btnAccount = findViewById(R.id.account);
         mImageView = findViewById(R.id.current_pic);
         openbtn = findViewById(R.id.open_button);
+        lockToggle = findViewById(R.id.lock_toggle);
         user = mAuth.getCurrentUser();
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://wltdo-9af27.appspot.com/pictures/lucydoortest1.jpg");
@@ -84,6 +88,7 @@ public class DoorActivity extends AppCompatActivity {
         flags = userData.child("Flags");
         openRequest = flags.child("Flag2").child("OpenRequest");
         doorState = flags.child("Flag1").child("DoorState");
+        lockStatus = flags.child("Flag3").child("LockStatus");
         logs = userData.child("Logs");
         statusLog = logs.child("status");
         dogID = logs.child("dog");
@@ -101,6 +106,10 @@ public class DoorActivity extends AppCompatActivity {
                 .using(new FirebaseImageLoader())
                 .load(storageRef)
                 .into(mImageView);
+        lockToggle.setText("Unlocked");
+        lockToggle.setTextColor(Color.GREEN);
+        lockToggle.getThumbDrawable().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
+        lockToggle.getTrackDrawable().setColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY);
 
         btnAccount.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -108,6 +117,25 @@ public class DoorActivity extends AppCompatActivity {
                 startActivity(new Intent(DoorActivity.this, AccountInfoActivity.class));
             }
         });
+
+        lockToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                switchColor(b);
+                if(lockToggle.isChecked())
+                {
+                    lockToggle.setText("Locked");
+                    lockToggle.setTextColor(Color.RED);
+
+                }else{
+                    lockToggle.setText("Unlocked");
+                    lockToggle.setTextColor(Color.GREEN);
+
+                }
+                lockStatus.setValue(lockToggle.getText());
+            }
+        });
+
 
         openRequest.addValueEventListener(new ValueEventListener() {
             @Override
@@ -254,5 +282,27 @@ public class DoorActivity extends AppCompatActivity {
         String[] tdate = ftime[0].split("-");
         String date = tdate[1] + "/" + tdate[2] + "/" + tdate[0];
         data.setTime(ttime  + " " + date);
+    }
+    private void switchColor(boolean checked) {
+
+        int thumbColor;
+        int trackColor;
+
+        if(checked) {
+            thumbColor = Color.RED;
+            trackColor = thumbColor;
+        } else {
+            thumbColor = Color.GREEN;
+            trackColor = thumbColor;
+        }
+
+        try {
+            lockToggle.getThumbDrawable().setColorFilter(thumbColor, PorterDuff.Mode.MULTIPLY);
+            lockToggle.getTrackDrawable().setColorFilter(trackColor, PorterDuff.Mode.MULTIPLY);
+        }catch (NullPointerException e)
+        {
+            e.printStackTrace();
+        }
+
     }
 }

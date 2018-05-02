@@ -75,6 +75,15 @@
                 android:textColor="@color/colorAccent"
                 android:text="Open" />
 
+            <Switch
+                android:id="@+id/lock_toggle"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:switchMinWidth="75dp"
+                android:text="Unlocked"
+                android:textAlignment="viewStart"
+                android:textColor="@android:color/black" />
+
         </LinearLayout>
     </LinearLayout>
 
