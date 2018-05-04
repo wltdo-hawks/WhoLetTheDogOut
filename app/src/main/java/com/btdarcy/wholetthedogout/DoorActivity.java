@@ -132,7 +132,12 @@ public class DoorActivity extends AppCompatActivity {
                     lockToggle.setTextColor(Color.GREEN);
 
                 }
-                lockStatus.setValue(lockToggle.getText());
+                if(lockToggle.getText() == "Locked") {
+                    lockStatus.setValue("1");
+                }else{
+                    lockStatus.setValue("0");
+                }
+
             }
         });
 
@@ -145,10 +150,10 @@ public class DoorActivity extends AppCompatActivity {
                 {
                     openRequest.setValue("Close");
                 }
-                if(value.equals("End"))
+                if(value.equals(""))
                 {
                     openbtn.setText("Open");
-                }else if(value.equals("Open"))
+                }else if(value.equals("1"))
                 {
                     openbtn.setText("waiting");
                 }
@@ -164,7 +169,7 @@ public class DoorActivity extends AppCompatActivity {
         openbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                openRequest.setValue("Open");
+                openRequest.setValue("1");
                 openbtn.setText("Waiting");
             }
         });
